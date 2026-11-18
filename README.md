@@ -4,7 +4,37 @@ dbt 公式の jaffle shop のデータを使い、**指標の定義を MetricFlo
 
 **ダッシュボード: https://sr-56.github.io/dbt_jaffle_shop/**
 
-![アーキテクチャ](docs/images/architecture.webp)
+```mermaid
+flowchart TB
+    subgraph local["ローカルPC（AIの入口）"]
+        claude["<b>Claude Code</b><br/>自然言語で質問"]
+        mf_local["<b>mf CLI</b><br/>mf query で指標を集計"]
+        sql["<b>public_data.py</b><br/>semantic layer の範囲だけに SQL"]
+    end
+
+    subgraph github["GitHub（ダッシュボード）"]
+        pages["<b>ダッシュボード</b><br/>静的HTML（Pages）"]
+        actions["<b>GitHub Actions</b><br/>saved query を mf query"]
+    end
+
+    dbt["<b>dbt Core プロジェクト</b><br/>モデル＋MetricFlow定義（Git管理・唯一の定義元）"]
+    duckdb[("<b>DuckDB</b><br/>データファイル・SQL実行")]
+
+    claude --> mf_local
+    claude --> sql
+    actions -- JSON --> pages
+    mf_local --> dbt
+    sql --> dbt
+    actions --> dbt
+    dbt --> duckdb
+
+    classDef entry fill:#eeedfe,stroke:#534ab7,color:#26215c
+    classDef core fill:#e1f5ee,stroke:#0f6e56,color:#04342c
+    classDef box fill:#fafaf9,stroke:#c3c2b7,color:#0b0b0b
+    class claude,pages entry
+    class dbt core
+    class mf_local,sql,actions,duckdb box
+```
 
 - **ダッシュボード**: GitHub Actions が `mf query` で集計した JSON を、静的 HTML として GitHub Pages に公開します
 - **AI 分析**: ローカルの Claude Code に自然言語で質問すると、定義済みの指標は `mf` CLI で、指標を超えた分析（分布、併売、コホートなど）は公開モデルへの SQL で答えます

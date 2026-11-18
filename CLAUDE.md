@@ -4,7 +4,7 @@
 
 dbt 公式 jaffle shop のデータを使い、MetricFlow で定義した指標を静的ダッシュボードとローカルの AI 分析の両方から使うプロジェクト。
 
-- 構成図: `docs/images/architecture.webp`。指標は MetricFlow（`models/marts/_marts.yml`）を唯一の定義元にする
+- 構成図: `README.md` の mermaid 図。指標は MetricFlow（`models/marts/_marts.yml`）を唯一の定義元にする
 - 実行環境: dbt-core 1.12 + dbt-duckdb + dbt-metricflow（uv で管理、Python 3.12）+ DuckDB（`jaffle_shop.duckdb`）
 - コマンドは `uv run dbt ...` / `uv run mf ...`。`DBT_PROFILES_DIR=.`（プロジェクト直下の `profiles.yml` を使う。`.claude/settings.json` で設定済み）
 - 2つの出口:
