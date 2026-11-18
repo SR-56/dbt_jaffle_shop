@@ -2,6 +2,8 @@
 
 dbt 公式の jaffle shop のデータを使い、**指標の定義を MetricFlow の1か所にまとめ、静的なダッシュボードとローカルの AI 分析の両方から使う**構成にしたプロジェクトです。
 
+**ダッシュボード: https://sr-56.github.io/dbt_jaffle_shop/**
+
 ![アーキテクチャ](docs/images/architecture.webp)
 
 - **ダッシュボード**: GitHub Actions が `mf query` で集計した JSON を、静的 HTML として GitHub Pages に公開します
