@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[oc]
+.venv
+
+# dbt / DuckDB が作るもの
+target/
+logs/
+.user.yml
+*.duckdb
+*.duckdb.wal
+
+# CI で生成するダッシュボード用データ
+site/data/
+
+# Windows から WSL にコピーしたときにできるファイル
+*:Zone.Identifier

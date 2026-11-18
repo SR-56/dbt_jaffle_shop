@@ -1,0 +1,15 @@
+{
+  "env": {
+    "DBT_PROFILES_DIR": "."
+  },
+  "permissions": {
+    "allow": [
+      "Bash(uv run mf list:*)",
+      "Bash(uv run mf query:*)",
+      "Bash(uv run mf validate-configs:*)",
+      "Bash(uv run dbt build:*)",
+      "Bash(uv run dbt parse:*)",
+      "Bash(uv run python scripts/public_data.py:*)"
+    ]
+  }
+}

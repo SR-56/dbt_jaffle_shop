@@ -1,0 +1,21 @@
+# ダッシュボード（GitHub Pages）に載せるデータセット。CI で `mf query --saved-query` して JSON にする
+saved_queries:
+  - name: kpi_monthly
+    description: 月次の主要 KPI
+    query_params:
+      metrics: [revenue, order_count, average_order_value, ordering_customers, gross_profit]
+      group_by: ["TimeDimension('metric_time', 'month')"]
+  - name: revenue_by_store_monthly
+    description: 店舗別・月次の売上
+    query_params:
+      metrics: [revenue, order_count]
+      group_by: ["TimeDimension('metric_time', 'month')", "Dimension('store__store_name')"]
+  - name: sales_by_product
+    description: 商品別の販売個数・売上・粗利（全期間）
+    query_params:
+      metrics: [items_sold, product_revenue, gross_profit]
+      group_by: ["Dimension('product__product_name')", "Dimension('product__product_type')"]
+  - name: kpi_total
+    description: 全期間の主要 KPI（比率の指標は月次を足し合わせられないので、全期間で別に集計する）
+    query_params:
+      metrics: [revenue, order_count, average_order_value, ordering_customers, gross_profit]

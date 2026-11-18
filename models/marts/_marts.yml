@@ -1,0 +1,190 @@
+# marts の定義。semantic layer（MetricFlow）の唯一の定義元で、ダッシュボードと AI の両方がこれを使う。
+# AI に公開されるのは semantic layer に載せたものだけ（scripts/public_data.py が target/semantic_manifest.json から読む）:
+#   - モデル: semantic_model が有効なもの
+#   - 列: entity か dimension にした列。金額などの数値も、AI に見せるなら dimension にする
+# 列を AI に見せたくなければ、entity / dimension にしない（YAML に書かないか、description だけにする）。
+models:
+  - name: fct_orders
+    description: 注文のファクト。1行が1件の注文。金額はドル単位
+    semantic_model: true
+    agg_time_dimension: ordered_at
+    columns:
+      - name: order_id
+        description: 注文 ID
+        entity: {type: primary, name: order}
+        data_tests: [unique, not_null]
+      - name: customer_id
+        description: 注文した顧客の ID（dim_customers.customer_id）
+        entity: {type: foreign, name: customer}
+      - name: store_id
+        description: 注文を受けた店舗の ID（dim_stores.store_id）
+        entity: {type: foreign, name: store}
+      - name: ordered_at
+        description: 注文日時
+        granularity: day
+        dimension: {type: time, label: 注文日時}
+      - name: subtotal
+        description: 税抜の注文金額
+        dimension: categorical
+      - name: tax_paid
+        description: 税額
+        dimension: categorical
+      - name: order_total
+        description: 税込の注文金額（subtotal + tax_paid）
+        dimension: categorical
+      - name: item_count
+        description: 注文に含まれる商品の個数
+        dimension: categorical
+      - name: is_food_order
+        description: フード（jaffle）を1個以上含むか
+        dimension: {type: categorical, label: フードを含む注文}
+      - name: is_drink_order
+        description: ドリンクを1個以上含むか
+        dimension: {type: categorical, label: ドリンクを含む注文}
+    metrics:
+      - name: revenue
+        label: 売上（税込）
+        description: 注文金額（order_total）の合計
+        agg: sum
+        expr: order_total
+      - name: order_count
+        label: 注文数
+        agg: count
+        expr: order_id
+      - name: ordering_customers
+        label: 注文した顧客数
+        agg: count_distinct
+        expr: customer_id
+      - name: tax_paid
+        label: 税額
+        agg: sum
+        expr: tax_paid
+      - name: average_order_value
+        label: 平均注文単価
+        description: 売上（税込）÷ 注文数
+        type: ratio
+        numerator: revenue
+        denominator: order_count
+
+  - name: fct_order_items
+    description: 注文明細のファクト。1行が注文に含まれる商品1個。金額はドル単位
+    semantic_model: true
+    agg_time_dimension: ordered_at
+    columns:
+      - name: order_item_id
+        description: 明細 ID
+        entity: {type: primary, name: order_item}
+        data_tests: [unique, not_null]
+      - name: order_id
+        description: 注文 ID（fct_orders.order_id）
+        entity: {type: foreign, name: order}
+      - name: product_id
+        description: 商品 ID（dim_products.product_id）
+        entity: {type: foreign, name: product}
+      - name: customer_id
+        description: 注文した顧客の ID（dim_customers.customer_id）
+        entity: {type: foreign, name: customer}
+      - name: store_id
+        description: 注文を受けた店舗の ID（dim_stores.store_id）
+        entity: {type: foreign, name: store}
+      - name: ordered_at
+        description: 注文日時
+        granularity: day
+        dimension: {type: time, label: 注文日時}
+      - name: product_price
+        description: 商品の定価（税抜）
+        dimension: categorical
+      - name: supply_cost
+        description: 商品1個あたりの備品コストの合計
+        dimension: categorical
+    metrics:
+      - name: items_sold
+        label: 販売個数
+        agg: count
+        expr: order_item_id
+      - name: product_revenue
+        label: 商品売上（税抜）
+        description: 商品の定価の合計
+        agg: sum
+        expr: product_price
+      - name: supply_cost
+        label: 原価
+        description: 商品ごとの備品コストの合計
+        agg: sum
+        expr: supply_cost
+      - name: gross_profit
+        label: 粗利
+        description: 商品売上（税抜）− 原価
+        type: derived
+        expr: product_revenue - supply_cost
+        input_metrics: [product_revenue, supply_cost]
+
+  # customer_name は AI に公開しない（dimension にしていない）
+  - name: dim_customers
+    description: 顧客のディメンション。1行が1人の顧客
+    semantic_model: true
+    columns:
+      - name: customer_id
+        description: 顧客 ID
+        entity: {type: primary, name: customer}
+        data_tests: [unique, not_null]
+      - name: first_ordered_at
+        description: 最初の注文日時。注文がなければ null
+        granularity: day
+        dimension: {type: time}
+      - name: lifetime_orders
+        description: これまでの注文件数
+        dimension: categorical
+      - name: customer_type
+        description: 生涯の注文が2件以上なら returning、それ以外は new
+        dimension: {type: categorical, label: 顧客区分}
+        data_tests:
+          - accepted_values: {arguments: {values: [new, returning]}}
+
+  - name: dim_stores
+    description: 店舗のディメンション。1行が1店舗
+    semantic_model: true
+    columns:
+      - name: store_id
+        description: 店舗 ID
+        entity: {type: primary, name: store}
+        data_tests: [unique, not_null]
+      - name: store_name
+        description: 店舗名（都市名）
+        dimension: {type: categorical, label: 店舗}
+      - name: opened_at
+        description: 開店日
+        granularity: day
+        dimension: {type: time}
+      - name: tax_rate
+        description: 税率（0.06 = 6%）
+        dimension: categorical
+
+  - name: dim_products
+    description: 商品のディメンション。1行が1商品
+    semantic_model: true
+    columns:
+      - name: product_id
+        description: 商品 ID（SKU）
+        entity: {type: primary, name: product}
+        data_tests: [unique, not_null]
+      - name: product_name
+        description: 商品名
+        dimension: {type: categorical, label: 商品名}
+      - name: product_type
+        description: jaffle（フード）または beverage（ドリンク）
+        dimension: {type: categorical, label: 商品種別}
+      - name: product_description
+        description: 商品の説明
+        dimension: categorical
+      - name: product_price
+        description: 定価（税抜）
+        dimension: categorical
+
+  # MetricFlow が内部で使う日付テーブル。semantic model ではないので AI には公開されない
+  - name: metricflow_time_spine
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day

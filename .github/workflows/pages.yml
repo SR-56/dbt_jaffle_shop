@@ -1,0 +1,49 @@
+# dbt build → MetricFlow の検証 → saved query を JSON に書き出し → GitHub Pages に公開
+name: Publish dashboard
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # データが固定の seed なので定期実行は不要。データ元が変わるようになったら有効にする
+  # schedule:
+  #   - cron: "0 0 * * 1"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  DBT_PROFILES_DIR: .
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - name: dbt build（seed → model → test）
+        run: uv run dbt build
+      - name: semantic layer の検証
+        run: uv run mf validate-configs
+      - name: saved query を JSON に書き出す
+        run: uv run python scripts/export_metrics.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

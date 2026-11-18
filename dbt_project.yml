@@ -1,0 +1,19 @@
+name: jaffle_shop
+version: "1.0.0"
+profile: jaffle_shop
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+models:
+  jaffle_shop:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+# dbt-core 1.12 の partial parse は新形式の semantic YAML を変更すると
+# 「metric が重複している」と誤って失敗することがあるため無効にする（小さいプロジェクトなので速度の影響は小さい）
+flags:
+  partial_parse: false
