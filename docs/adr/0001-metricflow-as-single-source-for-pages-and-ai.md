@@ -6,7 +6,7 @@
 
 ## 背景
 
-当初は「フラットな marts → ダッシュボード」と「スタースキーマ → semantic layer → Text-to-SQL」の2系統を目指していた（CLAUDE.md）。ユーザーが構成を見直し、指標の定義を MetricFlow に1本化することにした。構成図は README の mermaid 図。
+当初は「フラットな marts → ダッシュボード」と「スタースキーマ → semantic layer → Text-to-SQL」の2系統を目指していた（CLAUDE.md）。構成を見直し、指標の定義を MetricFlow に1本化することにした。構成図は README の mermaid 図。
 
 ## 検討した選択肢
 

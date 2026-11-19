@@ -10,6 +10,8 @@ dbt 公式 jaffle shop のデータを使い、MetricFlow で定義した指標�
 - 2つの出口:
   - ダッシュボード: GitHub Actions（`.github/workflows/pages.yml`）が saved query（`models/marts/_saved_queries.yml`）を `mf query` → `scripts/export_metrics.py` で JSON 化 → `site/` を GitHub Pages に公開
   - AI 分析: ローカルの Claude Code が、定義済みの指標は `mf query` で、指標を超えた分析は公開モデルへの SQL（`scripts/public_data.py`）で出す。手順は `.claude/skills/analyze-data/SKILL.md`
+  - MCP サーバー（`mcp_server/`、ADR-0005）: 同じ分析を MCP のツール（`get_context` / `query_metrics` / `run_sql`）として出す。今は手元の stdio で動く段階（`uv run python -m mcp_server.server`）。テストは `uv run python -m pytest tests -q`
+  - `query_metrics` の絞り込みは「ディメンション・演算子・値」の組で受け取り、where 句はサーバー側で組み立てる。`mf` は sandbox の外で DuckDB 全体につないで動くので、利用者の文字列を SQL として `mf` に渡さない
 - データについて聞かれたら、`analyze-data` スキルに従う。staging・seed・DuckDB のファイルを直接読まない
 - AI に公開する範囲は semantic layer で決まる: semantic model になっているモデルの、entity か dimension にした列だけ（`target/semantic_manifest.json` から読む）。列を entity / dimension にするときは、AI に公開してよいかを考える
 - 時間の dimension は `dimension: {type: time}` と辞書の形で書く。`dimension: time` と文字列で書くと、dbt-core 1.12.7 では粒度が semantic_manifest.json に入らず、`mf query` が実行時に失敗する
@@ -44,5 +46,6 @@ dbt 公式 jaffle shop のデータを使い、MetricFlow で定義した指標�
 ### 書き方
 
 - 日本語で、簡潔に書く
+- リポジトリのオーナー（私）を主語にして書く。「ユーザーが決めた」「Claude が提案した」のように、Claude の視点からの書き方はしない（例: 「ユーザーが決定」→「決定」、「ユーザーの条件」→「私の条件」）
 - 「検討した選択肢」と「却下した理由」を必ず書く。判断を見直すときに一番必要になるのはここ
 - 推測ではなく、実際に確認したこと（コマンドの結果など）を根拠に書く

@@ -53,7 +53,9 @@ flowchart TB
 | `scripts/export_metrics.py` | saved query を `mf query` で実行し、`site/data/*.json` に書き出す |
 | `site/index.html` | ダッシュボード（ライブラリなしの HTML + SVG） |
 | `.github/workflows/pages.yml` | build → 検証 → JSON 書き出し → Pages 公開 |
-| `scripts/public_data.py` | AI に公開するモデル・列・指標の説明（`context`）と、公開モデルだけへの読み取り専用 SQL（`sql`） |
+| `mcp_server/` | 同じ分析を MCP のツール（`get_context` / `query_metrics` / `run_sql`）として出すサーバー。今は手元で動く段階 |
+| `scripts/public_data.py` | AI に公開するモデル・列・指標の説明（`context`）と、公開モデルだけへの読み取り専用 SQL（`sql`）を、コマンドから確かめる |
+| `tests/` | MCP サーバーのテスト（範囲外のテーブル・列・ファイルに届かないことも確かめる） |
 | `.claude/skills/analyze-data/` | Claude Code が分析するときの手順 |
 | `docs/adr/` | 設計判断の記録 |
 
